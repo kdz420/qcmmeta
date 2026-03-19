@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM – L'Entretien et la Décision d'Embauche</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f4f6f9;
+    color: #1a1a2e;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    color: white;
+    padding: 36px 24px 28px;
+    text-align: center;
+  }
+  .header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 14px; opacity: 0.75; }
+
+  .progress-bar-wrap { background: #e2e8f0; height: 6px; width: 100%; }
+  .progress-bar-fill {
+    height: 6px;
+    background: linear-gradient(90deg, #e94560, #f97316);
+    width: 0%;
+    transition: width 0.4s ease;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  .score-summary {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .score-pill {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #555;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .score-pill strong { font-size: 20px; color: #1a1a2e; }
+
+  .question-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: box-shadow 0.2s;
+  }
+  .question-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .q-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .q-theme {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #e94560;
+    font-weight: 600;
+  }
+
+  .question-text {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #1a1a2e;
+    margin-bottom: 18px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border: 2px solid #e8ecf0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-size: 14px;
+    color: #333;
+    user-select: none;
+  }
+  .option:hover:not(.disabled) { border-color: #1a1a2e; background: #f8f9ff; }
+  .option .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #f0f2f5;
+    color: #555;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.18s;
+  }
+  .option input[type="radio"] { display: none; }
+  .option.selected { border-color: #0f3460; background: #eef2fb; }
+  .option.selected .letter { background: #0f3460; color: white; }
+  .option.correct { border-color: #22c55e; background: #f0fdf4; }
+  .option.correct .letter { background: #22c55e; color: white; }
+  .option.wrong { border-color: #ef4444; background: #fef2f2; }
+  .option.wrong .letter { background: #ef4444; color: white; }
+  .option.disabled { cursor: default; pointer-events: none; }
+  .option.reveal-correct { border-color: #22c55e; background: #f0fdf4; }
+  .option.reveal-correct .letter { background: #22c55e; color: white; }
+
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .feedback.correct-fb { background: #f0fdf4; border-left: 4px solid #22c55e; color: #15803d; }
+  .feedback.wrong-fb { background: #fef2f2; border-left: 4px solid #ef4444; color: #b91c1c; }
+  .feedback.show { display: block; }
+
+  .result-panel {
+    display: none;
+    background: white;
+    border-radius: 20px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-top: 12px;
+  }
+  .result-panel.show { display: block; }
+  .result-circle {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+  }
+  .result-circle.good { background: #dcfce7; color: #16a34a; }
+  .result-circle.medium { background: #fef9c3; color: #ca8a04; }
+  .result-circle.low { background: #fee2e2; color: #dc2626; }
+  .result-panel h2 { font-size: 22px; margin-bottom: 8px; }
+  .result-panel p { font-size: 14px; color: #666; margin-bottom: 28px; }
+  .btn-retry {
+    display: inline-block;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #e94560, #f97316);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-retry:hover { opacity: 0.9; }
+
+  .sticky-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid #e8ecf0;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
+  }
+  .progress-text { font-size: 13px; color: #666; }
+  .btn-submit-all {
+    padding: 11px 28px;
+    background: linear-gradient(135deg, #e94560, #f97316);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-submit-all:hover { opacity: 0.9; }
+  .btn-submit-all:disabled { background: #ccc; cursor: default; }
+
+  @media (max-width: 500px) {
+    .header h1 { font-size: 20px; }
+    .question-card { padding: 20px; }
+    .sticky-bar { flex-direction: column; }
+    .btn-submit-all { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Metalrun · Formation RH</div>
+  <h1>L'Entretien &amp; la Décision d'Embauche</h1>
+  <p>Testez vos connaissances sur le cours — 10 questions</p>
+</div>
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+<div class="container">
+
+  <div class="score-summary">
+    <div class="score-pill">Répondues <strong id="countAnswered">0</strong>/10</div>
+    <div class="score-pill">Correctes <strong id="countCorrect" style="color:#22c55e">—</strong></div>
+    <div class="score-pill">Incorrectes <strong id="countWrong" style="color:#ef4444">—</strong></div>
+  </div>
+
+  <div id="quizContainer"></div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="result-circle" id="resultCircle"></div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultMsg"></p>
+    <button class="btn-retry" onclick="resetQuiz()">🔄 Recommencer le QCM</button>
+  </div>
+
+</div>
+
+<div class="sticky-bar" id="stickyBar">
+  <span class="progress-text" id="progressText">0 question(s) répondue(s)</span>
+  <button class="btn-submit-all" id="btnSubmitAll" onclick="submitAll()" disabled>Valider toutes les réponses</button>
+</div>
+
+<script>
+const questions = [
+  {
+    theme: "Préparation",
+    q: "Selon le cours, qu'est-ce qui constitue le véritable facteur de réussite d'un entretien ?",
+    options: [
+      "Le charisme du recruteur pendant la rencontre",
+      "La préparation minutieuse en amont de l'entretien",
+      "La durée de l'entretien (au moins 2 heures)",
+      "Le nombre de candidats reçus"
+    ],
+    correct: 1,
+    explanation: "Le cours affirme clairement : « Un bon entretien se gagne avant la rencontre. La préparation minutieuse est le véritable facteur de réussite. »"
+  },
+  {
+    theme: "Phase 1 – Préparation",
+    q: "Lors de l'analyse du dossier de candidature, quel est l'objectif principal de la lecture du CV et de la lettre de motivation ?",
+    options: [
+      "Vérifier l'orthographe du candidat",
+      "Repérer les points à creuser et identifier les signaux forts",
+      "Comparer les salaires demandés par les candidats",
+      "Évaluer la mise en page du document"
+    ],
+    correct: 1,
+    explanation: "Le cours précise que l'analyse du CV et de la LM sert à « lire efficacement pour repérer les points à creuser et identifier les signaux forts »."
+  },
+  {
+    theme: "Trame d'entretien",
+    q: "Pourquoi le cours recommande-t-il d'utiliser un guide standardisé pour tous les candidats ?",
+    options: [
+      "Pour gagner du temps lors de l'entretien",
+      "Pour garantir l'équité entre tous les candidats",
+      "Pour éviter les questions difficiles",
+      "Pour impressionner les candidats"
+    ],
+    correct: 1,
+    explanation: "Le cours indique que la trame d'entretien est un « guide standardisé pour garantir l'équité entre tous les candidats »."
+  },
+  {
+    theme: "Trame d'entretien",
+    q: "Quelle durée d'entretien est recommandée dans le cours ?",
+    options: [
+      "15 à 30 minutes",
+      "30 à 45 minutes",
+      "45 à 60 minutes",
+      "Plus de 90 minutes"
+    ],
+    correct: 2,
+    explanation: "Le cours mentionne qu'il faut « définir la durée prévue (45-60 min) » dans l'organisation logistique de l'entretien."
+  },
+  {
+    theme: "Méthode STAR",
+    q: "Dans la méthode STAR, que représente la lettre « A » ?",
+    options: [
+      "Analyse — analyser les compétences du candidat",
+      "Aptitude — vérifier les aptitudes professionnelles",
+      "Action — les démarches concrètes mises en œuvre",
+      "Ambition — évaluer les ambitions du candidat"
+    ],
+    correct: 2,
+    explanation: "Dans la méthode STAR : S = Situation, T = Tâche, A = Action (démarches concrètes mises en œuvre), R = Résultat."
+  },
+  {
+    theme: "Méthode STAR",
+    q: "À quoi correspond la lettre « R » dans la méthode STAR ?",
+    options: [
+      "Recrutement — la décision finale",
+      "Référence — les recommandations du candidat",
+      "Résultat — l'impact mesurable de son intervention",
+      "Réponse — la réaction du candidat aux questions"
+    ],
+    correct: 2,
+    explanation: "Le R de STAR correspond au Résultat : « l'impact mesurable de l'intervention » du candidat dans la situation décrite."
+  },
+  {
+    theme: "Biais cognitifs",
+    q: "Qu'est-ce que le « biais de confirmation » décrit dans le cours ?",
+    options: [
+      "Favoriser un candidat qui nous ressemble",
+      "Laisser une impression globale influencer toute l'évaluation",
+      "Rechercher des informations qui confirment notre première impression",
+      "Confirmer le candidat dans son poste après la période d'essai"
+    ],
+    correct: 2,
+    explanation: "Le biais de confirmation est défini comme la « tendance à rechercher des informations qui confirment notre première impression plutôt que les remettre en question »."
+  },
+  {
+    theme: "Biais cognitifs",
+    q: "Quel outil le cours recommande-t-il pour minimiser l'impact des biais subjectifs ?",
+    options: [
+      "Un test de personnalité obligatoire",
+      "Une grille d'évaluation standardisée avec critères objectifs",
+      "Un entretien collectif avec plusieurs candidats",
+      "Un questionnaire rempli par le candidat avant l'entretien"
+    ],
+    correct: 1,
+    explanation: "Le cours conseille d'« utiliser une grille d'évaluation standardisée avec critères objectifs pour minimiser l'impact des biais subjectifs »."
+  },
+  {
+    theme: "Proposition d'embauche",
+    q: "Comment le cours recommande-t-il de communiquer une décision positive au candidat retenu ?",
+    options: [
+      "Uniquement par email formel",
+      "Par courrier postal suivi d'un appel",
+      "Par un appel téléphonique chaleureux suivi d'une proposition écrite détaillée",
+      "Via les réseaux sociaux professionnels"
+    ],
+    correct: 2,
+    explanation: "Le cours préconise une « approche : appel téléphonique chaleureux suivi d'une proposition écrite détaillée »."
+  },
+  {
+    theme: "Points clés",
+    q: "Selon la conclusion du cours, sur quoi repose un entretien réussi ?",
+    options: [
+      "Sur l'expérience du recruteur et son intuition",
+      "Sur une préparation minutieuse, une conduite structurée et une évaluation objective",
+      "Sur la rapidité de la prise de décision",
+      "Sur le nombre de candidats comparés"
+    ],
+    correct: 1,
+    explanation: "La conclusion indique qu'« un entretien réussi repose sur une préparation minutieuse, une conduite structurée et une évaluation objective pour prendre la meilleure décision d'embauche »."
+  }
+];
+
+let answered = {};
+let submitted = false;
+
+function buildQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+  questions.forEach((q, qi) => {
+    const letters = ['A', 'B', 'C', 'D'];
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `card-${qi}`;
+    let optionsHTML = q.options.map((opt, oi) => `
+      <label class="option" id="opt-${qi}-${oi}" onclick="selectOption(${qi}, ${oi})">
+        <input type="radio" name="q${qi}" value="${oi}">
+        <span class="letter">${letters[oi]}</span>
+        <span>${opt}</span>
+      </label>
+    `).join('');
+    card.innerHTML = `
+      <div class="question-meta">
+        <div class="q-num">${qi + 1}</div>
+        <span class="q-theme">${q.theme}</span>
+      </div>
+      <div class="question-text">${q.q}</div>
+      <div class="options" id="opts-${qi}">${optionsHTML}</div>
+      <div class="feedback" id="fb-${qi}"></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectOption(qi, oi) {
+  if (submitted) return;
+  questions[qi].options.forEach((_, idx) => {
+    document.getElementById(`opt-${qi}-${idx}`)?.classList.remove('selected');
+  });
+  document.getElementById(`opt-${qi}-${oi}`)?.classList.add('selected');
+  answered[qi] = oi;
+  updateProgress();
+}
+
+function updateProgress() {
+  const count = Object.keys(answered).length;
+  document.getElementById('countAnswered').textContent = count;
+  document.getElementById('progressText').textContent = `${count} question(s) répondue(s)`;
+  document.getElementById('progressBar').style.width = (count / questions.length * 100) + '%';
+  document.getElementById('btnSubmitAll').disabled = count === 0;
+}
+
+function submitAll() {
+  if (submitted) return;
+  submitted = true;
+  document.getElementById('btnSubmitAll').disabled = true;
+  document.getElementById('stickyBar').style.display = 'none';
+
+  let correct = 0, wrong = 0;
+
+  questions.forEach((q, qi) => {
+    const userAnswer = answered[qi];
+    const isAnswered = userAnswer !== undefined;
+    const isCorrect = isAnswered && userAnswer === q.correct;
+    if (isCorrect) correct++;
+    else if (isAnswered) wrong++;
+
+    q.options.forEach((_, oi) => {
+      const el = document.getElementById(`opt-${qi}-${oi}`);
+      el.classList.add('disabled');
+      el.classList.remove('selected');
+      if (oi === q.correct) el.classList.add('reveal-correct');
+      if (isAnswered && oi === userAnswer && !isCorrect) el.classList.add('wrong');
+    });
+
+    const fb = document.getElementById(`fb-${qi}`);
+    if (!isAnswered) {
+      fb.className = 'feedback wrong-fb show';
+      fb.innerHTML = `❌ Non répondue — La bonne réponse était : <strong>${['A','B','C','D'][q.correct]}. ${q.options[q.correct]}</strong><br><em>${q.explanation}</em>`;
+    } else if (isCorrect) {
+      fb.className = 'feedback correct-fb show';
+      fb.innerHTML = `✅ Bonne réponse ! <em>${q.explanation}</em>`;
+    } else {
+      fb.className = 'feedback wrong-fb show';
+      fb.innerHTML = `❌ Incorrect. La bonne réponse était : <strong>${['A','B','C','D'][q.correct]}. ${q.options[q.correct]}</strong><br><em>${q.explanation}</em>`;
+    }
+
+    const card = document.getElementById(`card-${qi}`);
+    card.style.borderLeft = isCorrect ? '4px solid #22c55e' : '4px solid #ef4444';
+  });
+
+  document.getElementById('countCorrect').textContent = correct;
+  document.getElementById('countWrong').textContent = wrong;
+  document.getElementById('progressBar').style.width = '100%';
+
+  const pct = Math.round(correct / questions.length * 100);
+  const panel = document.getElementById('resultPanel');
+  const circle = document.getElementById('resultCircle');
+  circle.textContent = pct + '%';
+
+  if (pct >= 80) {
+    circle.className = 'result-circle good';
+    document.getElementById('resultTitle').textContent = '🎉 Excellent travail !';
+    document.getElementById('resultMsg').textContent = `Vous avez obtenu ${correct}/10. Vous maîtrisez bien les techniques d'entretien et de décision d'embauche !`;
+  } else if (pct >= 50) {
+    circle.className = 'result-circle medium';
+    document.getElementById('resultTitle').textContent = '👍 Pas mal !';
+    document.getElementById('resultMsg').textContent = `Vous avez obtenu ${correct}/10. Relisez les parties sur la méthode STAR et les biais cognitifs pour consolider vos acquis.`;
+  } else {
+    circle.className = 'result-circle low';
+    document.getElementById('resultTitle').textContent = '📚 À revoir';
+    document.getElementById('resultMsg').textContent = `Vous avez obtenu ${correct}/10. Nous vous recommandons de relire le cours en entier avant de retenter le QCM.`;
+  }
+
+  panel.classList.add('show');
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+}
+
+function resetQuiz() {
+  answered = {};
+  submitted = false;
+  document.getElementById('countCorrect').textContent = '—';
+  document.getElementById('countWrong').textContent = '—';
+  document.getElementById('countAnswered').textContent = '0';
+  document.getElementById('resultPanel').classList.remove('show');
+  document.getElementById('stickyBar').style.display = 'flex';
+  document.getElementById('btnSubmitAll').disabled = true;
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressText').textContent = '0 question(s) répondue(s)';
+  buildQuiz();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+buildQuiz();
+</script>
+</body>
+</html>
